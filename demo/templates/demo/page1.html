@@ -1,0 +1,18 @@
+{% extends "base"|with_theme %}
+
+{% block contents %}
+<h1>This is page 1!</h1>
+
+<ul>
+    <li>Item 1</li>
+    <li>Item 2</li>
+    <li>Item 3</li>
+</ul>
+{% endblock %}
+
+
+{% block sidenav_items %}
+<li><a href="/page1">Page 1</a></li>
+<li><a href="/page2">Page 2</a></li>
+<li><a href="/">Index</a></li>
+{% endblock %}
