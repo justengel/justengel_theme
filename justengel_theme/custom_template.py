@@ -2,6 +2,7 @@ import os
 from typing import ClassVar
 from starlette.background import BackgroundTask
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from jinja2.loaders import split_template_path
 from .extension import IncludeBlockExtension
 
@@ -15,6 +16,7 @@ MY_DIR = os.path.dirname(__file__)
 class ThemeTemplates(Jinja2Templates):
     THEME_NAME: ClassVar[str] = 'justengel_theme'  # Required!
     DIRECTORY: ClassVar[str] = os.path.join(MY_DIR, 'templates')
+    STATIC_DIRECTORY: ClassVar[str] = None
 
     DEFAULT_CONTEXT = {
         'site_name': '',
@@ -26,9 +28,13 @@ class ThemeTemplates(Jinja2Templates):
         'static': lambda url: url,  # Replaced with static
         }
 
-    def __init__(self, main_directory: str, theme: str = None, static_url: str = None) -> None:
+    def __init__(self, main_directory: str, theme: str = 'justengel_theme', static_url: str = '/static') -> None:
+        if theme is None:
+            theme = self.THEME_NAME
+
         self.DEFAULT_FILTERS = self.__class__.DEFAULT_FILTERS.copy()
         self.static_url = static_url
+        self.static_files = None
         self.theme = theme
         self.available_themes = []
 
@@ -142,7 +148,39 @@ class ThemeTemplates(Jinja2Templates):
             return os.path.join(static_url, url)
         return url
 
-    def install_app(self, app, **kwargs) -> 'ThemeTemplates':
+    def get_static_directories(self):
+        given = []
+        add = given.append
+
+        static = getattr(self, 'STATIC_DIRECTORY', None)
+        if static is not None:
+            add(static)
+            yield static
+
+        for cls in self.__class__.__bases__:
+            static = getattr(cls, 'STATIC_DIRECTORY', None)
+            if static is not None and static not in given:
+                add(static)
+                yield static
+
+    def serve_static(self, app, static_url: str = None):
+        if static_url is not None:
+            self.static_url = static_url
+
+        static_dirs = self.get_static_directories()
+        self.static_files = StaticFiles()
+        for d in static_dirs:
+            if d not in self.static_files.all_directories:
+                self.static_files.all_directories.append(d)
+
+        if len(self.static_files.all_directories) > 0:
+            app.mount(self.static_url, self.static_files)
+
+    def install_app(self, app, serve_static: bool = False, **kwargs) -> 'ThemeTemplates':
         self.set_defaults(**kwargs)
         app.templates = self
+
+        if serve_static:
+            self.serve_static(app)
+
         return self
