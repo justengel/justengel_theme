@@ -1,52 +1,46 @@
+import os
 from jinja2 import lexer, nodes
 from jinja2.ext import Extension
 from jinja2.filters import do_mark_safe
 
 
-class IncludeOverrideExtension(Extension):
-    tags = {'include_override'}
+__all__ = ['IncludeBlockExtension']
 
-    def parse_import_context(self, node, default):
-        if self.stream.current.test_any(
-                "name:with", "name:without"
-                ) and self.stream.look().test("name:context"):
-            node.with_context = next(self.stream).value == "with"
-            self.stream.skip()
-        else:
-            node.with_context = default
-        return node
 
-    def parse(self, parser):
-        node = nodes.Include(lineno=next(parser.stream).lineno)
-        node.template = parser.parse_expression()
-        if parser.stream.current.test("name:ignore") and parser.stream.look().test(
-                "name:missing"
-                ):
-            node.ignore_missing = True
-            parser.stream.skip(2)
-        else:
-            node.ignore_missing = False
-        return parser.parse_import_context(node, True)
+class IncludeBlockExtension(Extension):
+    tags = {'include_block'}
 
-    # def parse(self, parser):
-    #     lineno = next(parser.stream).lineno
-    #     token = parser.stream.expect(lexer.TOKEN_STRING)
-    #     template = nodes.Const(token.value)
-    #     token = parser.stream.current
-    #     if token.value == '|':
-    #         next(parser.stream)
-    #         filt_name = parser.stream.current.value
-    #         next(parser.stream)
-    #         filt = self.environment.filters.get(filt_name, None)
-    #         if filt is not None:
-    #             template.value = filt(template.value)
-    #     call = self.call_method('include_override', [template], lineno=lineno)
-    #     return nodes.Output([call], lineno=lineno)
-
-    def include_override(self, template):
+    def template_contents(self, template, *args, **kwargs):
         """Helper callback."""
         tmp = self.environment.loader.get_source(self.environment, template)
         if isinstance(tmp, tuple):
-            # return tmp[0]
-            return do_mark_safe(tmp[0])
+            return tmp[0]
         return ''
+
+    def parse(self, parser):
+        lineno = next(parser.stream).lineno
+        template = parser.parse_expression()
+
+        filts = []
+        while isinstance(template, nodes.Filter):
+            filt = self.environment.filters.get(template.name, None)
+            if filt is not None:
+                filts.append(filt)
+            template = template.node
+
+        if isinstance(template, nodes.Const):
+            template = template.value
+
+        for f in reversed(filts):
+            template = f(template)
+
+        name = os.path.basename(os.path.splitext(template)[0])
+        content = self.template_contents(template)
+        content = '{{% block {name} %}}{content}{{% endblock {name} %}}'.format(name=name, content=content)
+        new_stream = self.environment._tokenize(content, template, filename=template, state=None)
+        next(new_stream)
+        old_stream, parser.stream = parser.stream, new_stream
+        node = parser.parse_block()
+        parser.stream = old_stream
+
+        return node

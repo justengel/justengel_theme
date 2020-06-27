@@ -1,7 +1,8 @@
 {% extends "base"|with_theme %}
 
 {% block contents %}
-<h1>This is page 1!</h1>
+<h1>Page 1!</h1>
+<p>Page 1 uses a block tag to modify the side navigation items!</p>
 
 <ul>
     <li>Item 1</li>
@@ -13,6 +14,6 @@
 
 {% block sidenav_items %}
 <li><a href="/page1">Page 1</a></li>
-<li><a href="/page2">Page 2</a></li>
 <li><a href="/">Index</a></li>
+    <li><a href="/page2">Page 2</a></li>
 {% endblock %}

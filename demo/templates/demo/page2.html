@@ -1,12 +1,40 @@
 {% extends "base"|with_theme %}
 
-{% block contents %}
-<h1>This is page 2!</h1>
+{% block container %}
+<main id='container' class="container" style="margin-left: 80px">
+    <h1>Page 2!</h1>
+    <p>Page 2 uses a block to remove the side Navigation, and uses another block for the top navbar.</p>
 
-<ul>
-    <li>Item 1</li>
-    <li>Item 2</li>
-    <li>Item 3</li>
-</ul>
+    <ul>
+        <li>Item 1</li>
+        <li>Item 2</li>
+        <li>Item 3</li>
+    </ul>
+</main>
 
-{% endblock contents %}
+{% endblock container %}
+
+
+{% block extra_head %}
+    <style>
+    ul.navbar li{
+        display:inline;
+        margin-left: 2em;
+    }
+    </style>
+{% endblock extra_head %}
+
+
+{% block navbar %}
+    <ul class="navbar">
+        <li><b style="font-size: 1.3em">Navigation:</b></li>
+        <li style="margin-left: 0.5em"><a href="/page2">Page 2</a></li>
+        <li><a href="/">Index</a></li>
+        <li><a href="/page1">Page 1</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block sidenav %}
+{% endblock %}
+

@@ -8,7 +8,7 @@
   <meta name="msqpplication-tap-highlight" content="no">
   <meta name="description" content="Application">
 
-  {% block head %}{% include 'head'|with_theme %}{% endblock head %}
+  {% include_block 'head'|with_theme %}
 
   {% block extra_head %}{% endblock extra_head %}
 
@@ -16,19 +16,19 @@
 </head>
 
 <body>
-  {% block begin_body %}{% include 'begin_body'|with_theme  %}{% endblock begin_body %}
+  {% include_block 'begin_body'|with_theme  %}
 
-  <header>{% block navbar %}{% include 'navbar'|with_theme %}{% endblock navbar %}</header>
+  <header>{% include_block 'navbar'|with_theme %}</header>
 
-  {% block sidenav %}{% include 'sidenav'|with_theme %}{% endblock sidenav %}
+  {% include_block 'sidenav'|with_theme %}
 
-  {% block container %}{% include 'container'|with_theme %}{% endblock container %}
+  {% include_block 'container'|with_theme %}
 
-  <footer>{% block footer %}{% include 'footer'|with_theme %}{% endblock footer %}</footer>
+  <footer>{% include_block 'footer'|with_theme %}</footer>
 
   {% block modals %}{% endblock modals %}
 
-  {% block end_body %}{% include 'end_body'|with_theme %}{% endblock end_body %}
+  {% include_block 'end_body'|with_theme %}
 
   {% block scripts %}{% endblock scripts %}
 </body>
