@@ -39,7 +39,9 @@ class IncludeBlockExtension(Extension):
     def parse(self, parser):
         lineno = next(parser.stream).lineno
         template = self.value_from_filter(parser.parse_expression())
-        if parser.stream.current.type != 'block_end':
+        parser.stream.skip_if('comma')
+        if parser.stream.skip_if('name:block_name'):
+            parser.stream.skip(1)  # Skip "="
             block_name = self.value_from_filter(parser.parse_expression())
         else:
             block_name = os.path.basename(os.path.splitext(template)[0])

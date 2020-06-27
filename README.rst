@@ -18,7 +18,7 @@ Create a base for your theme
     {# theme_templates/theme/base.html #}
     <html>
     <body>
-    {% include_block theme/sidenav.html %}
+    {% include_block "theme/sidenav.html" %}
 
     {% block contents %}
     <h1>Hello World!</h1>
