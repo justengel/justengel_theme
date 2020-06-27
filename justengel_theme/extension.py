@@ -9,6 +9,7 @@ __all__ = ['IncludeBlockExtension']
 
 class IncludeBlockExtension(Extension):
     tags = {'include_block'}
+    fields = {'template', 'block_name'}  # block_name is optional
 
     def template_contents(self, template, *args, **kwargs):
         """Helper callback."""
@@ -17,30 +18,40 @@ class IncludeBlockExtension(Extension):
             return tmp[0]
         return ''
 
-    def parse(self, parser):
-        lineno = next(parser.stream).lineno
-        template = parser.parse_expression()
-
+    def value_from_filter(self, node):
         filts = []
-        while isinstance(template, nodes.Filter):
-            filt = self.environment.filters.get(template.name, None)
+        while isinstance(node, nodes.Filter):
+            filt = self.environment.filters.get(node.name, None)
             if filt is not None:
                 filts.append(filt)
-            template = template.node
+            node = node.node
 
-        if isinstance(template, nodes.Const):
-            template = template.value
+        if isinstance(node, nodes.Const):
+            node = node.value
 
         for f in reversed(filts):
-            template = f(template)
+            node = f(node)
 
-        name = os.path.basename(os.path.splitext(template)[0])
+        if not isinstance(node, str):
+            node = node
+        return node
+
+    def parse(self, parser):
+        lineno = next(parser.stream).lineno
+        template = self.value_from_filter(parser.parse_expression())
+        if parser.stream.current.type != 'block_end':
+            block_name = self.value_from_filter(parser.parse_expression())
+        else:
+            block_name = os.path.basename(os.path.splitext(template)[0])
         content = self.template_contents(template)
-        content = '{{% block {name} %}}{content}{{% endblock {name} %}}'.format(name=name, content=content)
+        content = '{{% block {name} %}}{content}{{% endblock {name} %}}'.format(name=block_name, content=content)
         new_stream = self.environment._tokenize(content, template, filename=template, state=None)
         next(new_stream)
         old_stream, parser.stream = parser.stream, new_stream
+
         node = parser.parse_block()
+        node.lineno = lineno
+
         parser.stream = old_stream
 
         return node
