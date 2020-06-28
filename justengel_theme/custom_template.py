@@ -28,7 +28,7 @@ class ThemeTemplates(Jinja2Templates):
         'static': lambda url: url,  # Replaced with static
         }
 
-    def __init__(self, main_directory: str, theme: str = 'justengel_theme', static_url: str = '/static') -> None:
+    def __init__(self, directory: str = None, theme: str = 'justengel_theme', static_url: str = '/static') -> None:
         if theme is None:
             theme = self.THEME_NAME
 
@@ -38,7 +38,10 @@ class ThemeTemplates(Jinja2Templates):
         self.theme = theme
         self.available_themes = []
 
-        super().__init__(main_directory)
+        super().__init__(directory='')
+        self.env.loader.searchpath.pop()
+        if directory is not None:
+            self.add_directory(directory)
 
         # Add extensions
         self.env.add_extension(IncludeBlockExtension)
