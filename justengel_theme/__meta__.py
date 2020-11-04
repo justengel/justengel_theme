@@ -1,5 +1,5 @@
 name = 'justengel_theme'
-version = '0.0.4'
+version = '1.0.0'
 description = 'Jinja theme capability'
 url = 'https://github.com/justengel-web/justengel_theme'
 author = 'Justin Engel'
