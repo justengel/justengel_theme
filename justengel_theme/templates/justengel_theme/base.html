@@ -10,7 +10,7 @@
 
   {% include_block 'head'|with_theme block_name='head' %}
 
-  {% block extra_head %}{% endblock extra_head %}
+  {% include_block 'extra_head'|with_theme %}
 
   <title>{% block title %}{% if title %}{{ title }}{% endif %}{% endblock title %}</title>
 </head>
